@@ -1,0 +1,5 @@
+1. Langsung Jalankan file skenario3.sh, jangan lupa cluster harus sudah jalankan
+2. Hasilnya akan tidak ada lag dan read consistensy, karena 10000 key masih sangat kecil 
+3. tambahkan delay di setiap client dengan perintah berikut ini `tc qdisc add dev eth0 root netem delay 500ms`
+4. Jalankan Kembali file skenario3.sh
+5. Hasil nya akan terlihat lag dan read Consistensy
