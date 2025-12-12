@@ -69,12 +69,12 @@ Mengukur replication lag dan konsistensi data antara Master–Replica.
    ```
 
 Target Output:
-pc-1: role: master
-pc-2: role: slave
-pc-3: role: slave
-pc-4: role: slave
-pc-5: role: slave
-pc-6: role: slave
+- pc-1: role: master
+- pc-2: role: slave
+- pc-3: role: slave
+- pc-4: role: slave
+- pc-5: role: slave
+- pc-6: role: slave
 
 Pekerja:
 1. Kirim 1000 operasi SET ke master.
@@ -101,9 +101,9 @@ Menguji deteksi kegagalan master dan proses failover otomatis oleh Sentinel.
    ```
    
 Target Output:
-status=ok
-slaves=2
-sentinels=3
+- status=ok
+- slaves=2
+- sentinels=3
 
 Pekerja:
 1. Matikan master (kill container atau stop service).
@@ -134,7 +134,7 @@ Jika sebelumnya telah menjalankan skenario 1 atau 2, jalankan: `./clean.sh`
    ```
 
 Target Output:
-[OK] All 16384 slots covered.
+- [OK] All 16384 slots covered.
 
 Pekerja:
 - Simpan key dengan pola key0–key10000.
