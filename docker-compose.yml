@@ -1,0 +1,86 @@
+services:
+  pc-1:
+    image: fp-sister
+    build: .
+    container_name: pc-1
+    hostname: pc-1
+    tty: true
+    privileged: true
+    volumes:
+      - ./PC-1:/root
+    networks:
+      fp-sister-net:
+        ipv4_address: 192.168.122.10
+
+  pc-2:
+    image: fp-sister
+    build: .
+    container_name: pc-2
+    hostname: pc-2
+    tty: true
+    privileged: true
+    volumes:
+      - ./PC-2:/root
+    networks:
+      fp-sister-net:
+        ipv4_address: 192.168.122.20
+
+  pc-3:
+    image: fp-sister
+    build: .
+    container_name: pc-3
+    hostname: pc-3
+    tty: true
+    privileged: true
+    volumes:
+      - ./PC-3:/root
+    networks:
+      fp-sister-net:
+        ipv4_address: 192.168.122.30
+
+  pc-4:
+    image: fp-sister
+    build: .
+    container_name: pc-4
+    hostname: pc-4
+    tty: true
+    privileged: true
+    volumes:
+      - ./PC-4:/root
+    networks:
+      fp-sister-net:
+        ipv4_address: 192.168.122.40
+
+  pc-5:
+    image: fp-sister
+    build: .
+    container_name: pc-5
+    hostname: pc-5
+    tty: true
+    privileged: true
+    volumes:
+      - ./PC-5:/root
+    networks:
+      fp-sister-net:
+        ipv4_address: 192.168.122.50
+
+  pc-6:
+    image: fp-sister
+    build: .
+    container_name: pc-6
+    hostname: pc-6
+    tty: true
+    privileged: true
+    volumes:
+      - ./PC-6:/root
+    networks:
+      fp-sister-net:
+        ipv4_address: 192.168.122.60
+
+networks:
+  fp-sister-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.122.0/24
+        
