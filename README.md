@@ -1,7 +1,3 @@
-
-
-------------------------------------------------------------
-
 ### 1. Menjalankan dengan GNS3
 
 <div align="center">
@@ -80,7 +76,7 @@ pc-4: role: slave
 pc-5: role: slave
 pc-6: role: slave
 
-Job Pekerja:
+Pekerja:
 1. Kirim 1000 operasi SET ke master.
 2. Segera baca dari replica.
 3. Catat jumlah key yang belum tersinkron.
@@ -109,7 +105,7 @@ status=ok
 slaves=2
 sentinels=3
 
-Job Pekerja:
+Pekerja:
 1. Matikan master (kill container atau stop service).
 2. Amati:
    - Waktu failover
@@ -140,8 +136,6 @@ Jika sebelumnya telah menjalankan skenario 1 atau 2, jalankan: `./clean.sh`
 Target Output:
 [OK] All 16384 slots covered.
 
-Job Pekerja:
+Pekerja:
 - Simpan key dengan pola key0–key10000.
 - Amati key mapping ke tiap node cluster.
-
-------------------------------------------------------------
