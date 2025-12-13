@@ -77,6 +77,19 @@ services:
       fp-sister-net:
         ipv4_address: 192.168.122.60
 
+  pc-7:
+    image: fp-sister
+    build: .
+    container_name: pc-7
+    hostname: pc-7
+    tty: true
+    privileged: true
+    volumes:
+      - ./PC-7:/root
+    networks:
+      fp-sister-net:
+        ipv4_address: 192.168.122.70
+
 networks:
   fp-sister-net:
     driver: bridge
