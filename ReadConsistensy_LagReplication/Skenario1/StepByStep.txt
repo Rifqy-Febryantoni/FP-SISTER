@@ -1,5 +1,0 @@
-1. Jalakan file skenario1Master.sh di node Master
-2. Saat yang bersamaan jalankan file skenario1Client.sh di setiap node replica
-3. Karena 1000 data itu sangat kecil dan seperti nya tidak terjadi lag and read consistensy atur agar setiap paket yang masuk ke replica itu ada delay nya, 
-4. Di file skenario1Client ada syntax untuk buat delay tinggal uncomment
-5. Done
