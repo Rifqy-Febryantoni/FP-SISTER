@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Sebelum Menjalankan script ini jalankan uncomment dulu perintah dibawah ini
+# apt-get update
+# apt-get install bc -y
+
 SENTINEL_IP="192.168.122.40" 
 SENTINEL_PORT="26379"
 MASTER_NAME="mymaster"
