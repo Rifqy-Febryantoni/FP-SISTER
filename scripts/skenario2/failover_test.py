@@ -9,7 +9,7 @@ SENTINEL_HOSTS = ["192.168.122.40", "192.168.122.50", "192.168.122.60"]
 MASTER_NAME = "mymaster"
 PORT = 6379
 SENTINEL_PORT = 26379
-TEST_DURATION = 20
+TEST_DURATION = 30
 
 LOG_FILE = "sentinel_failover.log"
 
@@ -41,10 +41,10 @@ def can_write_to_master(master_host):
 
 def crash_master(master_host):
     try:
-        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=2, decode_responses=True)
-        conn.execute_command("DEBUG", "SEGFAULT")
-    except Exception:
-        pass
+        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=1, socket_timeout=1, decode_responses=True)
+        conn.execute_command("SHUTDOWN")
+    except Exception as e:
+        log(f"Crash attempt error: {e}")
 
 def check_master_alive(master_host):
     try:
@@ -84,9 +84,7 @@ def run_failover_test():
     # Crash master
     log(f"Crashing master {initial_master}...")
     crash_master(initial_master)
-    time.sleep(0.5)
     
-    # Try to write every 0.5s until failover completes
     log("Monitoring failover and attempting writes every 0.5s...")
     log("")
     log(f"{'Time (s)':<10} | {'Write Status':<15} | {'Current Master':<20}")
@@ -117,12 +115,22 @@ def run_failover_test():
                 if not downtime_start:
                     downtime_start = time.time()
             
-            log(f"{elapsed:<10.2f} | {status:<15} | {current_master:<20}")
-            
             # Check if failover completed
             if current_master != initial_master and write_ok and not failover_complete:
                 new_master = current_master
                 failover_complete = True
+            
+            # Check old master recovery
+            old_master_recovered = False
+            if failover_complete:
+                old_master_status = get_master_role(initial_master)
+                if old_master_status == "slave":
+                    old_master_recovered = True
+            
+            log(f"{elapsed:<10.2f} | {status:<15} | {current_master:<20}")
+            
+            # Print failover completion info
+            if current_master != initial_master and write_ok and failover_complete and new_master == current_master:
                 log("")
                 log(f"Failover completed after {elapsed:.2f}s")
                 log(f"Old master: {initial_master}")
@@ -132,19 +140,13 @@ def run_failover_test():
                     log(f"Total downtime: {downtime:.2f}s")
                 log(f"Write failures: {write_fail_count}")
                 log(f"Write successes: {write_success_count}")
-                
-        else:
-            write_fail_count += 1
-            log(f"{elapsed:<10.2f} | {'FAILED':<15} | {'NO MASTER':<20}")
-            if not downtime_start:
-                downtime_start = time.time()
-        
-        # Check if old master recovered
-        if failover_complete:
-            old_master_status = get_master_role(initial_master)
-            if old_master_status == "slave":
                 log("")
-                log(f"Old master {initial_master} recovered as replica")
+                log(f"Waiting for old master {initial_master} to recover...")
+            
+            # Print recovery info
+            if old_master_recovered:
+                log("")
+                log(f"Old master {initial_master} recovered as replica after {elapsed:.2f}s")
                 try:
                     conn = redis.Redis(host=initial_master, port=PORT, socket_connect_timeout=1, decode_responses=True)
                     info = conn.info("replication")
@@ -153,6 +155,12 @@ def run_failover_test():
                 except Exception:
                     pass
                 break
+                
+        else:
+            write_fail_count += 1
+            log(f"{elapsed:<10.2f} | {'FAILED':<15} | {'NO MASTER':<20}")
+            if not downtime_start:
+                downtime_start = time.time()
         
         time.sleep(0.5)
     
