@@ -23,4 +23,3 @@ echo "[*] Waiting for Sentinel to start..."
 sleep 3
 
 echo "[*] Redis Sentinel is running."
-redis-cli INFO sentinel
