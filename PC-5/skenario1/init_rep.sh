@@ -3,12 +3,12 @@ set -e
 
 echo "[*] Cleaning previous setup..."
 
-# 1. Stop services
+# Stop services
 systemctl stop redis-server 2>/dev/null || true
 pkill -f redis-sentinel 2>/dev/null || true
 pkill -f redis-server 2>/dev/null || true
 
-# 2. Remove old data
+# Remove old data
 rm -f /var/lib/redis/dump.rdb
 rm -f /var/lib/redis/appendonly.aof
 rm -f /var/lib/redis/nodes.conf
