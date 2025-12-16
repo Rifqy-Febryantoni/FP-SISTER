@@ -23,7 +23,7 @@ def log(message):
 def get_current_master():
     for sentinel_host in SENTINEL_HOSTS:
         try:
-            sentinel = redis.Redis(host=sentinel_host, port=SENTINEL_PORT, socket_connect_timeout=2)
+            sentinel = redis.Redis(host=sentinel_host, port=SENTINEL_PORT, socket_connect_timeout=2, decode_responses=True)
             master_info = sentinel.sentinel_get_master_addr_by_name(MASTER_NAME)
             if master_info:
                 return master_info[0]
@@ -33,7 +33,7 @@ def get_current_master():
 
 def can_write_to_master(master_host):
     try:
-        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=1)
+        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=1, decode_responses=True)
         conn.set("failover_test", "ok")
         return True
     except Exception:
@@ -41,14 +41,14 @@ def can_write_to_master(master_host):
 
 def crash_master(master_host):
     try:
-        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=2)
+        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=2, decode_responses=True)
         conn.execute_command("DEBUG", "SEGFAULT")
     except Exception:
         pass
 
 def check_master_alive(master_host):
     try:
-        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=1)
+        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=1, decode_responses=True)
         conn.ping()
         return True
     except Exception:
@@ -56,7 +56,7 @@ def check_master_alive(master_host):
 
 def get_master_role(master_host):
     try:
-        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=1)
+        conn = redis.Redis(host=master_host, port=PORT, socket_connect_timeout=1, decode_responses=True)
         info = conn.info("replication")
         return info.get("role", "unknown")
     except Exception:
@@ -146,7 +146,7 @@ def run_failover_test():
                 log("")
                 log(f"Old master {initial_master} recovered as replica")
                 try:
-                    conn = redis.Redis(host=initial_master, port=PORT, socket_connect_timeout=1)
+                    conn = redis.Redis(host=initial_master, port=PORT, socket_connect_timeout=1, decode_responses=True)
                     info = conn.info("replication")
                     replicating_to = info.get("master_host", "unknown")
                     log(f"Now replicating from: {replicating_to}")
