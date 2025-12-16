@@ -12,7 +12,7 @@ REPLICA_HOSTS = [
 PORT = 6379
 N = 1000
 MODE = "concurrent"  # "sequential" or "concurrent"
-
+READ_DELAY = 0.01  
 
 def connect_to_redis():
     try:
@@ -31,9 +31,10 @@ def connect_to_redis():
         sys.exit(1)
 
 
-def read_from_replica(replica):
+def read_from_replica(replica, retry_on_failure=False):
     missing = 0
     wrong = 0
+    failed_keys = []
     
     t_start = time.time()
     for i in range(N):
@@ -41,9 +42,47 @@ def read_from_replica(replica):
         val = replica['conn'].get(f"key:{i}")
         if val is None:
             missing += 1
+            if retry_on_failure:
+                failed_keys.append(i)
         elif val.decode() != expected:
             wrong += 1
+            if retry_on_failure:
+                failed_keys.append(i)
     t_end = time.time()
+    
+    # Retry until all keys synced or timeout
+    if retry_on_failure and failed_keys:
+        retry_attempts = 0
+        max_retry_time = 10  # Maximum time
+        retry_start = time.time()
+        
+        while failed_keys and (time.time() - retry_start < max_retry_time):
+            time.sleep(0.5)
+            retry_attempts += 1
+            new_failed = []
+            
+            for i in failed_keys:
+                expected = str(i)
+                val = replica['conn'].get(f"key:{i}")
+                if val is None or val.decode() != expected:
+                    new_failed.append(i)
+            
+            failed_keys = new_failed
+            
+            if not failed_keys:
+                print(f"[{replica['name']}] All keys synced after {retry_attempts} retry attempt(s)")
+                break
+        
+        # Final count
+        missing = 0
+        wrong = 0
+        for i in range(N):
+            expected = str(i)
+            val = replica['conn'].get(f"key:{i}")
+            if val is None:
+                missing += 1
+            elif val.decode() != expected:
+                wrong += 1
     
     read_time = t_end - t_start
     synced = N - missing - wrong
@@ -68,6 +107,9 @@ def sequential_test(master, replicas):
     t1 = time.time()
     write_time = t1 - t0
     print(f"Done writes in {write_time:.4f} seconds\n")
+
+    if READ_DELAY > 0:
+        time.sleep(READ_DELAY)
 
     replica_stats = []
     for replica in replicas:
@@ -99,12 +141,15 @@ def concurrent_test(master, replicas):
         write_done = True
     
     def read_thread(replica):
-        stat = read_from_replica(replica)
+        stat = read_from_replica(replica, retry_on_failure=True)
         replica_stats.append(stat)
     
     # Start write thread
     writer = threading.Thread(target=write_thread)
     writer.start()
+    
+    if READ_DELAY > 0:
+        time.sleep(READ_DELAY)
     
     # Start read threads
     readers = []
