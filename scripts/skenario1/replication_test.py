@@ -56,22 +56,32 @@ def read_from_replica(replica, retry_on_failure=False):
         max_retry_time = 10  # Maximum time
         retry_start = time.time()
         
+        print(f"[{replica['name']}] Retrying {len(failed_keys)} failed keys...")
+        
         while failed_keys and (time.time() - retry_start < max_retry_time):
             time.sleep(0.5)
             retry_attempts += 1
             new_failed = []
+            retry_missing = 0
+            retry_wrong = 0
             
             for i in failed_keys:
                 expected = str(i)
                 val = replica['conn'].get(f"key:{i}")
-                if val is None or val.decode() != expected:
+                if val is None:
                     new_failed.append(i)
+                    retry_missing += 1
+                elif val.decode() != expected:
+                    new_failed.append(i)
+                    retry_wrong += 1
             
             failed_keys = new_failed
             
             if not failed_keys:
                 print(f"[{replica['name']}] All keys synced after {retry_attempts} retry attempt(s)")
                 break
+            else:
+                print(f"[{replica['name']}] Retry #{retry_attempts}: {retry_missing} missing, {retry_wrong} wrong (total: {len(failed_keys)} remaining)")
         
         # Final count
         missing = 0
@@ -83,6 +93,8 @@ def read_from_replica(replica, retry_on_failure=False):
                 missing += 1
             elif val.decode() != expected:
                 wrong += 1
+        
+        t_end = time.time()
     
     read_time = t_end - t_start
     synced = N - missing - wrong
