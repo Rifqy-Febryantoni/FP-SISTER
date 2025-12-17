@@ -11,8 +11,10 @@ REPLICA_HOSTS = [
 
 PORT = 6379
 N = 1000
-MODE = "concurrent"  # "sequential" or "concurrent"
-READ_DELAY = 0.01  
+MODE = "concurrent"  
+# MODE = "sequential"
+
+READ_DELAY = 0.01    
 
 def connect_to_redis():
     try:
@@ -56,7 +58,7 @@ def read_from_replica(replica, retry_on_failure=False):
         max_retry_time = 10  # Maximum time
         retry_start = time.time()
         
-        print(f"[{replica['name']}] Retrying {len(failed_keys)} failed keys...")
+        print(f"[{replica['name']}] Retrying {len(failed_keys)} failed keys ({missing} missing, {wrong} wrong)...")
         
         while failed_keys and (time.time() - retry_start < max_retry_time):
             time.sleep(0.5)
@@ -140,17 +142,15 @@ def concurrent_test(master, replicas):
     print(f"Writing {N} keys to master concurrently with reads...\n")
     
     write_time = 0
-    write_done = False
     replica_stats = []
     
     def write_thread():
-        nonlocal write_time, write_done
+        nonlocal write_time
         t0 = time.time()
         for i in range(N):
             master.set(f"key:{i}", str(i))
         t1 = time.time()
         write_time = t1 - t0
-        write_done = True
     
     def read_thread(replica):
         stat = read_from_replica(replica, retry_on_failure=True)
@@ -185,41 +185,11 @@ def concurrent_test(master, replicas):
     return write_time, replica_stats
 
 
-def measure_consistency(replicas):
-    start_wait = time.time()
-    checks = 0
-    
-    while True:
-        all_synced = True
-        
-        for i in range(N):
-            expected = str(i)
-            
-            for replica in replicas:
-                val = replica['conn'].get(f"key:{i}")
-                if val is None or val.decode() != expected:
-                    all_synced = False
-                    break
-            
-            if not all_synced:
-                break
-        
-        checks += 1
-        if all_synced:
-            break
-        
-        time.sleep(0.05)
-    
-    end_wait = time.time()
-    return end_wait - start_wait
-
-
-def print_summary(write_time, replica_stats, lag_total):
+def print_summary(write_time, replica_stats):
     print("\n--- Summary ---")
     print(f"Master: Wrote {N} keys in {write_time:.4f} seconds")
     for stat in replica_stats:
         print(f"{stat['name']}: {stat['synced']}/{N} synced ({stat['sync_pct']:.1f}%), {stat['missing']} missing, {stat['wrong']} wrong")
-    print(f"Replication lag: {lag_total:.4f} seconds")
 
 
 def main():
@@ -240,18 +210,7 @@ def main():
         print(f"Unknown mode: {MODE}")
         sys.exit(1)
     
-    # Measure time until all replicas are consistent
-    total_unsynced = sum(stat['missing'] + stat['wrong'] for stat in replica_stats)
-    
-    if total_unsynced > 0:
-        print("Measuring lag until both replicas are fully consistent...")
-        lag_total = measure_consistency(replicas)
-        print(f"Both replicas became fully consistent after {lag_total:.4f} seconds.")
-    else:
-        print("Both replicas were already fully consistent.")
-        lag_total = 0.0
-    
-    print_summary(write_time, replica_stats, lag_total)
+    print_summary(write_time, replica_stats)
 
 
 if __name__ == "__main__":
