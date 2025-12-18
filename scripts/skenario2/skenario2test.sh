@@ -49,7 +49,7 @@ while true; do
     check_master=$(redis-cli -h $SENTINEL_IP -p $SENTINEL_PORT sentinel get-master-addr-by-name $MASTER_NAME | head -n 1)
 
     # B. Coba Tulis Data (Tes Availability)
-    write_test=$(redis-cli -h $check_master -p 6379 -o 1 set failover_test "ok" 2>&1)
+    write_test=$(timeout 0.5 redis-cli -h $check_master -p 6379 set failover_test "ok" 2>&1)
     
     # C. Tentukan Status
     if [[ "$write_test" == "OK" ]]; then
