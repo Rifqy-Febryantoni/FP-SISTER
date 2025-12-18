@@ -11,7 +11,6 @@ echo "============================================="
 # 1. CEK MASTER SAAT INI
 echo "[1] Mengecek Master saat ini..."
 
-# KITA TANYA SENTINEL, BUKAN COBA NULIS
 CURRENT_MASTER=$(redis-cli -h $SENTINEL_IP -p $SENTINEL_PORT sentinel get-master-addr-by-name $MASTER_NAME | head -n 1)
 
 if [ -z "$CURRENT_MASTER" ]; then
