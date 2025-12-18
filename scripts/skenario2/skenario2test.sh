@@ -26,7 +26,7 @@ echo "[2] MEMATIKAN MASTER ($CURRENT_MASTER)..."
 echo "    Mengirim perintah 'DEBUG SEGFAULT' (Simulasi Crash)..."
 
 # Kita kirim perintah crash ke Master di background
-redis-cli -h $CURRENT_MASTER -p 6379 debug segfault > /dev/null 2>&1 &
+redis-cli -h $CURRENT_MASTER -p 6379 shutdown > /dev/null 2>&1 &
 
 echo "✅ Master dimatikan! Memulai Stopwatch Failover..."
 echo ""
