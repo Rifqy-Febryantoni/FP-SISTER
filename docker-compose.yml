@@ -8,6 +8,7 @@ services:
     privileged: true
     volumes:
       - ./PC-1:/root
+      - ./scripts:/root/scripts
     networks:
       fp-sister-net:
         ipv4_address: 192.168.122.10
@@ -21,6 +22,7 @@ services:
     privileged: true
     volumes:
       - ./PC-2:/root
+      - ./scripts:/root/scripts
     networks:
       fp-sister-net:
         ipv4_address: 192.168.122.20
@@ -34,6 +36,7 @@ services:
     privileged: true
     volumes:
       - ./PC-3:/root
+      - ./scripts:/root/scripts
     networks:
       fp-sister-net:
         ipv4_address: 192.168.122.30
@@ -47,6 +50,7 @@ services:
     privileged: true
     volumes:
       - ./PC-4:/root
+      - ./scripts:/root/scripts
     networks:
       fp-sister-net:
         ipv4_address: 192.168.122.40
@@ -60,6 +64,7 @@ services:
     privileged: true
     volumes:
       - ./PC-5:/root
+      - ./scripts:/root/scripts
     networks:
       fp-sister-net:
         ipv4_address: 192.168.122.50
@@ -73,9 +78,23 @@ services:
     privileged: true
     volumes:
       - ./PC-6:/root
+      - ./scripts:/root/scripts
     networks:
       fp-sister-net:
         ipv4_address: 192.168.122.60
+
+  pc-7:
+    image: fp-sister
+    build: .
+    container_name: pc-7
+    hostname: pc-6
+    tty: true
+    privileged: true
+    volumes:
+      - ./scripts:/root/scripts
+    networks:
+      fp-sister-net:
+        ipv4_address: 192.168.122.70
 
 networks:
   fp-sister-net:
